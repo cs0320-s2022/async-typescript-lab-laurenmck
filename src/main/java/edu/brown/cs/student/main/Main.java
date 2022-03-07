@@ -1,23 +1,17 @@
 package edu.brown.cs.student.main;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import com.google.common.collect.ImmutableMap;
+
 import com.google.gson.Gson;
-import freemarker.template.Configuration;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import spark.*;
-import spark.template.freemarker.FreeMarkerEngine;
 
 /**
  * The Main class of our project. This is where execution begins.
@@ -64,6 +58,7 @@ public final class Main {
     // TODO: create a call to Spark.post to make a POST request to a URL which
     // will handle getting matchmaking results for the input
     // It should only take in the route and a new ResultsHandler
+    Spark.post("/results", new ResultsHandler());
 
     Spark.options("/*", (request, response) -> {
       String accessControlRequestHeaders = request.headers("Access-Control-Request-Headers");
@@ -79,8 +74,6 @@ public final class Main {
 
       return "OK";
     });
-
-    Spark.post("/results", new ResultsHandler());
 
     // Allows requests from any domain (i.e., any URL). This makes development
     // easier, but it’s not a good idea for deployment.
@@ -106,35 +99,44 @@ public final class Main {
 
   /**
    * Handles requests for horoscope matching on an input
-   * 
+   *
    * @return GSON which contains the result of MatchMaker.makeMatches
    */
   private static class ResultsHandler implements Route {
     @Override
-    public String handle(Request req, Response res) {
+    public String handle(Request req, Response res) throws JSONException {
       // TODO: Get JSONObject from req and use it to get the value of the sun, moon,
       // and rising
       // for generating matches
-      JSONObject reqJson;
+
+      JSONObject reqJson = null;
+      String sun = "";
+      String moon = "";
+      String rising = "";
+
       try {
+        // Put the request's body in JSON format
         reqJson = new JSONObject(req.body());
-        String moon = reqJson.getString("moon");
-        String sun = reqJson.getString("sun");
-        String rising = reqJson.getString("rising");
+        sun = reqJson.getString("sun");
+        moon = reqJson.getString("moon");
+        rising = reqJson.getString("rising");
 
-        // TODO: use the MatchMaker.makeMatches method to get matches
-        List<String> matches = MatchMaker.makeMatches(sun, moon, rising);
-
-        // TODO: create an immutable map using the matches
-        Map<String, List<String>> matchesMap = Map.of("matches", matches);
-
-        // TODO: return a json of the suggestions (HINT: use GSON.toJson())
-        Gson GSON = new Gson();
-        return GSON.toJson(matchesMap);
-      } catch (JSONException e){
+      } catch (JSONException e) {
         e.printStackTrace();
         return null;
       }
+
+      // TODO: use the MatchMaker.makeMatches method to get matches
+
+      List<String> matches = MatchMaker.makeMatches(sun, moon, rising);
+
+      // TODO: create an immutable map using the matches
+      Map<String, List<String>> matchesMap = Map.of("suggestionsLst", matches);
+
+      // TODO: return a json of the suggestions (HINT: use GSON.toJson())
+      Gson GSON = new Gson();
+      String suggestions = GSON.toJson(matchesMap);
+      return suggestions;
     }
   }
 }

@@ -1,6 +1,6 @@
 // TODO: select the list element where the suggestions should go, and all three dropdown elements
 //  HINT: look at the HTML
-const suggestionsLst = document.getElementById("suggestions") as HTMLDivElement;
+const suggestionsLst = document.getElementById("suggestions") as HTMLUListElement
 
 // Here, when the value of sun is changed, we will call the method postAndUpdate.
 // TODO: Do the same for moon and rising
@@ -16,7 +16,7 @@ rising.addEventListener("change", () => postAndUpdate());
 type MatchesRequestData = {sun: string, moon: string, rising: string}
 
 // TODO: Define a type for the response data object here.
-type Matches = {matches: string[]}
+type Matches = {suggestionsLst: string[]}
 
 function postAndUpdate(): void {
   // TODO: empty the suggestionList (you want new suggestions each time someone types something new)
@@ -32,7 +32,7 @@ function postAndUpdate(): void {
     rising : rising.value
   };
 
-  console.log(postParameters)
+  //console.log(postParameters)
 
   // TODO: make a POST request using fetch to the URL to handle this request you set in your Main.java
   //  HINT: check out the POST REQUESTS section of the lab and of the front-end guide.
@@ -41,14 +41,16 @@ function postAndUpdate(): void {
   fetch ("http://localhost:4567/results", {
     method: "post",
     body: JSON.stringify(postParameters),
-    headers: {'Access-Control-Allow-Origin':'*'},
+    headers: {'Access-Control-Allow-Origin':'*',
+              'Content-Type': 'application/json; charset=UTF-8',
+    }
     })
 
   // TODO: Call and fill in the updateSuggestions method in one of the .then statements in the Promise
   //  Parse the JSON in the response object
   //  HINT: remember to get the specific field in the JSON you want to use
       .then((response:Response) => response.json())
-      .then((matches: Matches) => updateSuggestions(matches.matches))
+      .then((matches: Matches) => updateSuggestions(matches['suggestionsLst']))
       .then((error: any) => console.log("Error:", error))
 }
 
@@ -72,6 +74,7 @@ function updateSuggestions(matches: string[]): void {
 document.addEventListener("keyup", keyListener);
 
 async function keyListener(key: any) {
+  // I learned the switch statement syntax for this from the link above
   switch (key.code) {
     case "KeyA":
       await updateValues("Scorpio", "Libra", "Leo");
